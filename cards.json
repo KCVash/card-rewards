@@ -1,0 +1,6 @@
+[
+  { "merchant": "7-11", "bank": "國泰世華", "card": "CUBE 卡", "reward": 3.0, "note": "需切權益；先簡化" },
+  { "merchant": "7-11", "bank": "台新", "card": "Richart 卡", "reward": 3.8, "note": "依方案/任務；先用參考值" },
+  { "merchant": "餐飲", "bank": "滙豐", "card": "Live+ 現金回饋卡", "reward": 3.88, "note": "餐飲/購物/娛樂；有上限" },
+  { "merchant": "海外", "bank": "滙豐", "card": "旅人卡", "reward": 0, "note": "積分/哩程卡：暫不換算%" }
+]
