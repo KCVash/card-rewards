@@ -3,101 +3,68 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>信用卡回饋查詢</title>
-  <style>
-    body { font-family: system-ui, -apple-system, "Segoe UI", Arial; margin: 24px; line-height: 1.4; }
-    .row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
-    input { padding: 10px 12px; font-size: 16px; width: min(420px, 100%); }
-    button { padding: 10px 12px; font-size: 16px; cursor: pointer; }
-    .hint { color: #555; margin-top: 6px; }
-    .list { margin-top: 16px; display: grid; gap: 10px; }
-    .card { border: 1px solid #ddd; border-radius: 10px; padding: 12px 14px; }
-    .top { display: flex; justify-content: space-between; gap: 12px; align-items: baseline; }
-    .name { font-weight: 700; }
-    .reward { font-weight: 800; font-size: 18px; }
-    .note { color: #444; margin-top: 6px; }
-    .meta { color: #666; font-size: 13px; margin-top: 2px; }
-    .empty { color: #666; margin-top: 16px; }
-  </style>
+  <title>信用卡回饋查詢 v2</title>
+  <link rel="stylesheet" href="./style.css" />
 </head>
 <body>
-  <h1>信用卡回饋查詢（MVP）</h1>
+  <main class="app">
+    <h1 class="page-title">信用卡回饋查詢 v2</h1>
 
-  <div class="row">
-    <input id="q" placeholder="輸入通路，例如：7-11、餐飲、海外…" />
-    <button id="btn">查詢</button>
-  </div>
-  <div class="hint">規則：只比對 merchant（完全相等），依 reward 由高到低排序。</div>
-
-  <div id="result" class="list"></div>
-  <div id="empty" class="empty" style="display:none;"></div>
-
-<script>
-  let rules = [];
-
-  async function loadData() {
-    const res = await fetch('./cards.json', { cache: 'no-store' });
-    if (!res.ok) throw new Error('讀取 cards.json 失敗');
-    rules = await res.json();
-  }
-
-  function norm(s) { return (s ?? '').toString().trim().toLowerCase(); }
-
-  function render(items, query) {
-    const result = document.getElementById('result');
-    const empty = document.getElementById('empty');
-    result.innerHTML = '';
-    empty.style.display = 'none';
-
-    if (!items.length) {
-      empty.textContent = `找不到「${query}」的回饋資料（或你尚未在 cards.json 填這個通路）。`;
-      empty.style.display = 'block';
-      return;
-    }
-
-    for (const it of items) {
-      const el = document.createElement('div');
-      el.className = 'card';
-      const r = Number(it.reward || 0);
-      el.innerHTML = `
-        <div class="top">
-          <div>
-            <div class="name">${it.bank}｜${it.card}</div>
-            <div class="meta">通路：${it.merchant}</div>
-          </div>
-          <div class="reward">${r.toFixed(2).replace(/\.00$/,'')}%</div>
+    <section class="tab-content active" data-tab="search">
+      <article class="card-box">
+        <label for="search-input">找回饋（category / keywords）</label>
+        <div class="btn-row">
+          <input id="search-input" placeholder="例如：7-11、Uber、日本、壽星、補習班" />
+          <button id="search-btn" class="primary">搜尋</button>
         </div>
-        ${it.note ? `<div class="note">備註：${it.note}</div>` : ``}
-      `;
-      result.appendChild(el);
-    }
-  }
+        <p class="muted">匹配邏輯：category 包含 query 或任一 keyword 包含 query。</p>
+      </article>
+      <div id="search-empty" class="muted card-box"></div>
+      <div id="search-results"></div>
+    </section>
 
-  function search() {
-    const q = document.getElementById('q').value.trim();
-    const nq = norm(q);
-    if (!nq) return;
+    <section class="tab-content" data-tab="manage">
+      <article class="card-box">
+        <div class="btn-row">
+          <button id="add-card-btn" class="primary">新增卡片</button>
+          <button id="reset-storage-btn" class="outline">重置 localStorage</button>
+        </div>
+      </article>
+      <div id="manage-list"></div>
+    </section>
+  </main>
 
-    const items = rules
-      .filter(r => norm(r.merchant) === nq)
-      .sort((a, b) => (Number(b.reward || 0) - Number(a.reward || 0)));
+  <nav class="bottom-tabs">
+    <button class="active" data-tab="search">找回饋</button>
+    <button data-tab="manage">卡包管理</button>
+  </nav>
 
-    render(items, q);
-  }
+  <section id="editor-modal" class="editor" aria-hidden="true">
+    <div class="editor-panel">
+      <h2 id="editor-title">新增卡片</h2>
+      <article class="card-box">
+        <div class="row two">
+          <div>
+            <label for="card-bank">Bank</label>
+            <input id="card-bank" placeholder="例如：國泰世華" />
+          </div>
+          <div>
+            <label for="card-name">Card Name</label>
+            <input id="card-name" placeholder="例如：CUBE 卡" />
+          </div>
+        </div>
+      </article>
 
-  document.getElementById('btn').addEventListener('click', search);
-  document.getElementById('q').addEventListener('keydown', (e) => {
-    if (e.key === 'Enter') search();
-  });
+      <div id="rules-container"></div>
 
-  (async () => {
-    try { await loadData(); }
-    catch (err) {
-      const empty = document.getElementById('empty');
-      empty.textContent = '初始化失敗：' + err.message;
-      empty.style.display = 'block';
-    }
-  })();
-</script>
+      <div class="btn-row">
+        <button id="add-rule-btn" class="outline">新增 rule</button>
+        <button id="editor-save" class="primary">儲存</button>
+        <button id="editor-close">取消</button>
+      </div>
+    </div>
+  </section>
+
+  <script src="./app.js"></script>
 </body>
 </html>
