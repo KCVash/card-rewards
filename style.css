@@ -159,6 +159,12 @@ button.outline { background: #fff; border: 1px solid var(--border); }
 .rule-row + .rule-row { border-top: 1px solid #e8edf7; }
 .rule-title { font-weight: 700; font-size: .95rem; }
 .rule-channel { margin-top: 4px; font-size: .83rem; color: #72809b; }
+.rule-channel-label { margin-top: 6px; font-size: .78rem; color: #7c8aa5; }
+.rule-chip-list { margin-top: 6px; display: flex; flex-wrap: wrap; gap: 7px; }
+.chip { display: inline-flex; align-items: center; border: 1px solid #d6deef; background: #f2f6ff; color: #4d5d80; border-radius: 999px; padding: 3px 10px; font-size: .78rem; line-height: 1.4; }
+.chip-control { background: #e4edff; border-color: #c4d2f3; color: #264f9e; font-weight: 700; cursor: pointer; }
+.chip-control:hover { background: #d8e5ff; }
+.chip-control:active { background: #ccdcff; }
 .rule-metrics { text-align: right; }
 .rate-text { font-size: 1.1rem; font-weight: 800; color: #cb2b2b; }
 .weight-text { margin-top: 2px; font-size: .79rem; color: #6f7a91; }
