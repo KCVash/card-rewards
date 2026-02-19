@@ -180,14 +180,19 @@ function renderSearchResult(items, query) {
       <article class="card-box">
         <div class="result-top">
           <div>
-            <div class="title">${escapeHTML(card.bank)}｜${escapeHTML(card.name)}</div>
-            <div class="meta">分類：${highlightText(rule.category, query)}</div>
+            <div class="title">${escapeHTML(card.bank)} ${escapeHTML(card.name)}</div>
+            <div class="rule-line">回饋率：${escapeHTML(rewardText(rule))}</div>
+            <div class="rule-line">權重約 ${rate.toFixed(2)}%</div>
           </div>
-          <div class="reward">權重約 ${rate.toFixed(2)}%</div>
+          <div>
+            <div class="reward-main">${escapeHTML(rewardText(rule))}</div>
+            <div class="reward-tag">${escapeHTML(rule.category || '一般回饋')}</div>
+          </div>
         </div>
-        <div class="rule-line">回饋：${escapeHTML(rewardText(rule))}</div>
-        <div class="rule-line">關鍵字：${highlightText(keywordList.join(', '), query) || '-'}</div>
-        ${rule.note ? `<div class="rule-line muted">備註：${escapeHTML(rule.note)}</div>` : ''}
+        <div class="notice">需切換【${escapeHTML(rule.category || '指定方案')}】（權重公式：%/360*1000）</div>
+        <div class="keywords-title">匹配關鍵字：</div>
+        <div class="rule-line">${highlightText(keywordList.join('、'), query) || '-'}</div>
+        ${rule.note ? `<div class="rule-line muted">補充說明：${escapeHTML(rule.note)}</div>` : ''}
       </article>
     `)
     .join('');
@@ -203,18 +208,18 @@ function renderManageList() {
   container.innerHTML = cardsState
     .map((card) => {
       const summary = card.rules
-        .map((rule) => `<li>${escapeHTML(rule.category || '未分類')}｜${escapeHTML(rewardText(rule))}｜權重約 ${equivalentRate(rule, card.name).toFixed(2)}%</li>`)
+        .map((rule) => `<li>${escapeHTML(rule.category || '未分類')}｜回饋：${escapeHTML(rewardText(rule))}｜權重：${equivalentRate(rule, card.name).toFixed(2)}%</li>`)
         .join('');
       return `
       <article class="card-box">
         <div class="result-top">
           <div>
-            <div class="title">${escapeHTML(card.bank)}｜${escapeHTML(card.name)}</div>
-            <div class="meta">共 ${card.rules.length} 條規則</div>
+            <div class="title">${escapeHTML(card.bank)} ${escapeHTML(card.name)}</div>
+            <div class="keywords-title">已設定的回饋規則</div>
           </div>
-          <div class="btn-row">
-            <button class="outline" data-edit-id="${card.id}">編輯</button>
-            <button class="danger" data-del-id="${card.id}">刪除</button>
+          <div class="manage-actions">
+            <button class="icon-action" data-edit-id="${card.id}" aria-label="編輯">✏️</button>
+            <button class="icon-action danger" data-del-id="${card.id}" aria-label="刪除">🗑️</button>
           </div>
         </div>
         <ul>${summary}</ul>
@@ -234,26 +239,26 @@ function ruleEditorTemplate(rule = {}) {
   <section class="card-box rule-editor">
     <div class="row">
       <div>
-        <label>分類 category</label>
+        <label>回饋類型</label>
         <input name="category" value="${escapeHTML(rule.category || '')}" placeholder="例如：超商/餐飲/海外" />
       </div>
       <div class="row two">
         <div>
-          <label>百分比 percentage（可空）</label>
+          <label>原始回饋 %</label>
           <input name="percentage" value="${rule.percentage ?? ''}" placeholder="例如：3.8" />
         </div>
         <div>
-          <label>valueText（可空）</label>
+          <label>自訂顯示（如：18元/哩）</label>
           <input name="valueText" value="${escapeHTML(rule.valueText || '')}" placeholder="例如：18元/哩" />
         </div>
       </div>
       <div>
-        <label>keywords（逗號/空白分隔）</label>
+        <label>關鍵字</label>
         <input name="keywords" value="${escapeHTML(rule.keywords || '')}" placeholder="7-11 超商 ibon" />
       </div>
       <div>
-        <label>備註 note</label>
-        <textarea name="note" placeholder="限制與條件">${escapeHTML(rule.note || '')}</textarea>
+        <label>需切換【XXX】（權重公式：%/360*1000）</label>
+        <textarea name="note" placeholder="例如：需切換【集精選】">${escapeHTML(rule.note || '')}</textarea>
       </div>
       <div class="btn-row">
         <button type="button" class="danger remove-rule">刪除這條規則</button>
@@ -282,7 +287,7 @@ function closeEditor() {
 function collectEditorForm() {
   const bank = document.getElementById('card-bank').value.trim();
   const name = document.getElementById('card-name').value.trim();
-  if (!bank || !name) throw new Error('請填寫 bank 與 card name');
+  if (!bank || !name) throw new Error('請填寫發卡銀行與卡片名稱');
 
   const rules = [...document.querySelectorAll('.rule-editor')]
     .map((el) => {
@@ -298,19 +303,26 @@ function collectEditorForm() {
     })
     .filter((rule) => rule.category || rule.keywords || rule.percentage !== null || rule.valueText || rule.note);
 
-  if (!rules.length) throw new Error('至少需要一條 rule');
+  if (!rules.length) throw new Error('至少需要一條回饋規則');
 
   return { bank, name, rules };
 }
 
 function bindEvents() {
-  document.getElementById('search-btn').addEventListener('click', () => {
+  const triggerSearch = () => {
     const q = document.getElementById('search-input').value;
     renderSearchResult(flattenMatches(q), q);
-  });
+  };
+
+  document.getElementById('search-input').addEventListener('input', triggerSearch);
 
   document.getElementById('search-input').addEventListener('keydown', (e) => {
-    if (e.key === 'Enter') document.getElementById('search-btn').click();
+    if (e.key === 'Enter') triggerSearch();
+  });
+
+  document.getElementById('clear-search-btn').addEventListener('click', () => {
+    document.getElementById('search-input').value = '';
+    triggerSearch();
   });
 
   document.querySelectorAll('.bottom-tabs button').forEach((btn) => {
@@ -361,12 +373,6 @@ function bindEvents() {
     } catch (error) {
       alert(error.message);
     }
-  });
-
-  document.getElementById('reset-storage-btn').addEventListener('click', () => {
-    if (!confirm('確定要清除 localStorage 並重新載入預設卡包資料？')) return;
-    localStorage.removeItem(STORAGE_KEY);
-    location.reload();
   });
 }
 

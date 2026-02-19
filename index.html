@@ -3,32 +3,45 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>信用卡回饋查詢 v3</title>
+  <title>刷卡神隊友</title>
   <link rel="stylesheet" href="./style.css" />
 </head>
 <body>
+  <header class="site-header">
+    <div class="brand-wrap">
+      <span class="brand-icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="2.5" y="6" width="19" height="13" rx="2.5"></rect>
+          <path d="M2.5 10h19"></path>
+          <path d="M7 15h4"></path>
+        </svg>
+      </span>
+      <h1>刷卡神隊友</h1>
+    </div>
+  </header>
+
   <main class="app">
-    <h1 class="page-title">信用卡回饋查詢 v3</h1>
     <p id="init-message" class="muted"></p>
 
     <section class="tab-content active" data-tab="search">
-      <article class="card-box">
-        <label for="search-input">找回饋（category / keywords）</label>
-        <div class="btn-row">
-          <input id="search-input" placeholder="例如：7-11、Uber、日本、壽星、補習班" />
-          <button id="search-btn" class="primary">搜尋</button>
+      <article class="page-head card-box">
+        <h2>今天要刷哪張卡？</h2>
+        <p class="muted">已套用 CUBE 卡全方案與專屬權重公式</p>
+        <div class="search-wrap">
+          <span class="input-icon" aria-hidden="true">🔍</span>
+          <input id="search-input" placeholder="7-11" />
+          <button id="clear-search-btn" class="icon-btn" type="button" aria-label="清除搜尋">✕</button>
         </div>
-        <p class="muted">匹配邏輯：category 包含 query 或任一 keyword 包含 query。</p>
       </article>
       <div id="search-empty" class="muted card-box"></div>
       <div id="search-results"></div>
     </section>
 
     <section class="tab-content" data-tab="manage">
-      <article class="card-box">
-        <div class="btn-row">
-          <button id="add-card-btn" class="primary">新增卡片</button>
-          <button id="reset-storage-btn" class="outline">重置 localStorage</button>
+      <article class="page-head card-box">
+        <div class="manage-title-row">
+          <h2>我的卡包管理</h2>
+          <button id="add-card-btn" class="primary">＋ 新增卡片</button>
         </div>
       </article>
       <div id="manage-list"></div>
@@ -36,8 +49,8 @@
   </main>
 
   <nav class="bottom-tabs">
-    <button class="active" data-tab="search">找回饋</button>
-    <button data-tab="manage">卡包管理</button>
+    <button class="active" data-tab="search"><span>🔍</span><span>找回饋</span></button>
+    <button data-tab="manage"><span>👛</span><span>卡包管理</span></button>
   </nav>
 
   <section id="editor-modal" class="editor" aria-hidden="true">
@@ -46,20 +59,25 @@
       <article class="card-box">
         <div class="row two">
           <div>
-            <label for="card-bank">Bank</label>
+            <label for="card-bank">發卡銀行</label>
             <input id="card-bank" placeholder="例如：國泰世華" />
           </div>
           <div>
-            <label for="card-name">Card Name</label>
+            <label for="card-name">卡片名稱</label>
             <input id="card-name" placeholder="例如：CUBE 卡" />
           </div>
         </div>
+        <div>
+          <label for="card-theme">卡面色系</label>
+          <input id="card-theme" placeholder="例如：藍色、黑金（僅作顯示用途）" />
+        </div>
       </article>
 
+      <h3 class="section-title">回饋規則設定</h3>
       <div id="rules-container"></div>
 
       <div class="btn-row">
-        <button id="add-rule-btn" class="outline">新增 rule</button>
+        <button id="add-rule-btn" class="outline">＋ 新增規則</button>
         <button id="editor-save" class="primary">儲存</button>
         <button id="editor-close">取消</button>
       </div>
