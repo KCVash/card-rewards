@@ -139,6 +139,12 @@ async function loadDefaultCards() {
   }
 }
 
+async function hydrateCardsFromDefault() {
+  const fallbackCards = await loadDefaultCards();
+  cardsState = fallbackCards;
+  saveCards();
+}
+
 async function loadCards() {
   const localData = tryParseLocalCards(localStorage.getItem(STORAGE_KEY));
   if (localData) {
@@ -146,9 +152,7 @@ async function loadCards() {
     return;
   }
 
-  const fallbackCards = await loadDefaultCards();
-  cardsState = fallbackCards;
-  saveCards();
+  await hydrateCardsFromDefault();
 }
 
 function flattenMatches(query) {
@@ -395,6 +399,17 @@ function bindEvents() {
   });
 
   document.getElementById('add-card-btn').addEventListener('click', () => openEditor());
+  document.getElementById('reset-cards-btn').addEventListener('click', async () => {
+    const shouldReset = confirm('確定要重置卡片資料嗎？這會清除你目前的卡包設定。');
+    if (!shouldReset) return;
+
+    localStorage.removeItem(STORAGE_KEY);
+    await hydrateCardsFromDefault();
+    renderManageList();
+    renderSearchResult([], '');
+    document.getElementById('search-input').value = '';
+    switchTab('manage');
+  });
   document.getElementById('editor-close').addEventListener('click', closeEditor);
   document.getElementById('add-rule-btn').addEventListener('click', () => {
     document.getElementById('rules-container').insertAdjacentHTML('beforeend', ruleEditorTemplate());

@@ -40,8 +40,14 @@
     <section class="tab-content" data-tab="manage">
       <article class="page-head card-box">
         <div class="manage-title-row">
-          <h2>我的卡包管理</h2>
-          <button id="add-card-btn" class="primary">＋ 新增卡片</button>
+          <div>
+            <h2>我的卡包管理</h2>
+            <p class="muted">會清除目前卡包並恢復成預設卡片</p>
+          </div>
+          <div class="manage-head-actions">
+            <button id="reset-cards-btn" class="outline" type="button">重置卡片資料</button>
+            <button id="add-card-btn" class="primary" type="button">＋ 新增卡片</button>
+          </div>
         </div>
       </article>
       <div id="manage-list"></div>
