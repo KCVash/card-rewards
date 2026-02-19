@@ -29,6 +29,9 @@ body {
   font-size: 1.3rem;
 }
 
+#init-message { margin: 0 0 12px; }
+#init-message.error { color: var(--danger); }
+
 .tab-content { display: none; }
 .tab-content.active { display: block; }
 

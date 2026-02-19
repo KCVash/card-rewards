@@ -1,10 +1,11 @@
 const STORAGE_KEY = 'my_credit_cards';
+const DEFAULT_CARDS_URL = './data/sample-cards.json';
 let cardsState = [];
 let currentTab = 'search';
 let editCardId = null;
 
-function uid() {
-  return `card_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+function uid(prefix = 'id') {
+  return `${prefix}_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
 }
 
 function safeText(v) {
@@ -34,6 +35,13 @@ function parseKeywords(raw) {
 function parseNumber(value) {
   const n = Number(value);
   return Number.isFinite(n) ? n : null;
+}
+
+function setInitMessage(message, isError = false) {
+  const el = document.getElementById('init-message');
+  if (!el) return;
+  el.textContent = message;
+  el.classList.toggle('error', isError);
 }
 
 function equivalentRate(rule, cardName) {
@@ -73,42 +81,18 @@ function highlightText(text, query) {
   return escapeHTML(source).replace(rgx, (m) => `<mark>${m}</mark>`);
 }
 
-function isNewCardsShape(data) {
-  return Array.isArray(data) && data.every((it) => typeof it === 'object' && Array.isArray(it.rules));
-}
-
-function convertLegacyData(legacyRows) {
-  const map = new Map();
-  for (const row of legacyRows || []) {
-    const bank = safeText(row.bank).trim() || '未分類銀行';
-    const name = safeText(row.card).trim() || '未命名卡片';
-    const key = `${bank}__${name}`;
-    if (!map.has(key)) map.set(key, { id: uid(), bank, name, rules: [] });
-
-    map.get(key).rules.push({
-      id: uid(),
-      category: safeText(row.merchant).trim(),
-      percentage: parseNumber(row.reward),
-      valueText: '',
-      keywords: safeText(row.merchant).trim(),
-      note: safeText(row.note).trim(),
-    });
-  }
-  return [...map.values()];
-}
-
 function normalizeCards(cards) {
-  return (cards || []).map((card) => ({
-    id: card.id || uid(),
-    bank: safeText(card.bank).trim(),
-    name: safeText(card.name).trim(),
-    rules: (card.rules || []).map((rule) => ({
-      id: rule.id || uid(),
-      category: safeText(rule.category).trim(),
-      percentage: rule.percentage === '' ? null : parseNumber(rule.percentage),
-      valueText: safeText(rule.valueText).trim(),
-      keywords: Array.isArray(rule.keywords) ? rule.keywords.join(', ') : safeText(rule.keywords).trim(),
-      note: safeText(rule.note).trim(),
+  return (Array.isArray(cards) ? cards : []).map((card) => ({
+    id: safeText(card?.id).trim() || uid('card'),
+    bank: safeText(card?.bank).trim(),
+    name: safeText(card?.name).trim(),
+    rules: (Array.isArray(card?.rules) ? card.rules : []).map((rule) => ({
+      id: safeText(rule?.id).trim() || uid('rule'),
+      category: safeText(rule?.category).trim(),
+      percentage: rule?.percentage === '' ? null : parseNumber(rule?.percentage),
+      valueText: safeText(rule?.valueText).trim(),
+      keywords: Array.isArray(rule?.keywords) ? rule.keywords.join(', ') : safeText(rule?.keywords).trim(),
+      note: safeText(rule?.note).trim(),
     })),
   }));
 }
@@ -117,18 +101,40 @@ function saveCards() {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(cardsState));
 }
 
+function tryParseLocalCards(raw) {
+  if (!raw) return null;
+  try {
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed : null;
+  } catch {
+    return null;
+  }
+}
+
+async function loadDefaultCards() {
+  try {
+    const res = await fetch(DEFAULT_CARDS_URL, { cache: 'no-store' });
+    if (!res.ok) throw new Error('fetch failed');
+    const payload = await res.json();
+    if (!Array.isArray(payload)) throw new Error('shape invalid');
+    const normalized = normalizeCards(payload);
+    setInitMessage('');
+    return normalized;
+  } catch {
+    setInitMessage('無法載入預設卡包資料，已使用空白資料啟動。', true);
+    return [];
+  }
+}
+
 async function loadCards() {
-  const localData = localStorage.getItem(STORAGE_KEY);
+  const localData = tryParseLocalCards(localStorage.getItem(STORAGE_KEY));
   if (localData) {
-    cardsState = normalizeCards(JSON.parse(localData));
+    cardsState = normalizeCards(localData);
     return;
   }
 
-  const res = await fetch('./cards.json', { cache: 'no-store' });
-  if (!res.ok) throw new Error('讀取 cards.json 失敗');
-
-  const payload = await res.json();
-  cardsState = isNewCardsShape(payload) ? normalizeCards(payload) : convertLegacyData(payload);
+  const fallbackCards = await loadDefaultCards();
+  cardsState = fallbackCards;
   saveCards();
 }
 
@@ -170,14 +176,14 @@ function renderSearchResult(items, query) {
 
   empty.style.display = 'none';
   container.innerHTML = items
-    .map(({ card, rule, keywordList, equivalentRate }) => `
+    .map(({ card, rule, keywordList, equivalentRate: rate }) => `
       <article class="card-box">
         <div class="result-top">
           <div>
             <div class="title">${escapeHTML(card.bank)}｜${escapeHTML(card.name)}</div>
             <div class="meta">分類：${highlightText(rule.category, query)}</div>
           </div>
-          <div class="reward">權重約 ${equivalentRate.toFixed(2)}%</div>
+          <div class="reward">權重約 ${rate.toFixed(2)}%</div>
         </div>
         <div class="rule-line">回饋：${escapeHTML(rewardText(rule))}</div>
         <div class="rule-line">關鍵字：${highlightText(keywordList.join(', '), query) || '-'}</div>
@@ -282,7 +288,7 @@ function collectEditorForm() {
     .map((el) => {
       const percentageValue = el.querySelector('input[name="percentage"]').value.trim();
       return {
-        id: uid(),
+        id: uid('rule'),
         category: el.querySelector('input[name="category"]').value.trim(),
         percentage: percentageValue === '' ? null : parseNumber(percentageValue),
         valueText: el.querySelector('input[name="valueText"]').value.trim(),
@@ -346,7 +352,7 @@ function bindEvents() {
       if (editCardId) {
         cardsState = cardsState.map((card) => (card.id === editCardId ? { ...card, ...payload } : card));
       } else {
-        cardsState.unshift({ id: uid(), ...payload });
+        cardsState.unshift({ id: uid('card'), ...payload });
       }
       saveCards();
       renderManageList();
@@ -358,22 +364,18 @@ function bindEvents() {
   });
 
   document.getElementById('reset-storage-btn').addEventListener('click', () => {
-    if (!confirm('確定要清除 localStorage 並重新載入 cards.json？')) return;
+    if (!confirm('確定要清除 localStorage 並重新載入預設卡包資料？')) return;
     localStorage.removeItem(STORAGE_KEY);
     location.reload();
   });
 }
 
 async function init() {
-  try {
-    await loadCards();
-    bindEvents();
-    switchTab(currentTab);
-    renderManageList();
-    renderSearchResult([], '');
-  } catch (err) {
-    document.body.innerHTML = `<main class="app"><h1>初始化失敗</h1><p>${escapeHTML(err.message)}</p></main>`;
-  }
+  await loadCards();
+  bindEvents();
+  switchTab(currentTab);
+  renderManageList();
+  renderSearchResult([], '');
 }
 
 init();
