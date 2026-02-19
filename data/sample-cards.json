@@ -1,26 +1,5 @@
 [
   {
-    "bank": "富邦",
-    "name": "J卡",
-    "rules": [
-      {
-        "category": "日韓旅遊",
-        "percentage": 3,
-        "valueText": "",
-        "keywords": "日本,韓國,東京,大阪,首爾",
-        "note": "需登錄"
-      },
-      {
-        "category": "國內一般",
-        "percentage": 1,
-        "valueText": "",
-        "keywords": "一般,全聯,餐廳",
-        "note": "無上限"
-      }
-    ],
-    "color": "黑色系"
-  },
-  {
     "bank": "國泰",
     "name": "CUBE卡",
     "rules": [
@@ -103,8 +82,8 @@
     "rules": [
       {
         "category": "餐飲娛樂",
-        "percentage": 3.88,
-        "valueText": "3.88%",
+        "percentage": 4.88,
+        "valueText": "4.88%",
         "keywords": "餐廳,王品,瓦城,爭鮮,麥當勞,星巴克,遠東百貨,SOGO,新光三越,威秀",
         "note": "綁定扣繳有加碼"
       },

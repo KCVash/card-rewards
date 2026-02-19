@@ -113,6 +113,10 @@ button.outline { background: #fff; border: 1px solid var(--border); }
 
 .manage-title-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
 
+.manage-title-row > div h2 { margin-bottom: 4px; }
+.manage-title-row > div .muted { margin: 0; }
+.manage-head-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+
 .manage-actions { display: inline-flex; gap: 6px; }
 .icon-action { background: rgba(255, 255, 255, 0.28); color: #fff; padding: 6px 8px; border-radius: 8px; border: 1px solid rgba(255, 255, 255, 0.35); }
 .icon-action.danger { background: rgba(126, 16, 16, 0.25); }
@@ -211,6 +215,7 @@ mark { background: var(--highlight); border-radius: 4px; padding: 0 2px; }
 @media (max-width: 560px) {
   .row.two { grid-template-columns: 1fr; }
   .manage-title-row { align-items: flex-start; flex-direction: column; }
+  .manage-head-actions { width: 100%; }
   .rule-row,
   .result-body-top { flex-direction: column; }
   .rule-metrics { text-align: left; }
