@@ -3,6 +3,8 @@ const DEFAULT_CARDS_URL = './data/sample-cards.json';
 let cardsState = [];
 let currentTab = 'search';
 let editCardId = null;
+const expandedRuleKeywords = new Set();
+const MANAGE_RULE_CHIP_LIMIT = 6;
 
 const CARD_COLOR_OPTIONS = [
   '藍色系',
@@ -40,6 +42,13 @@ function escapeHTML(str) {
 function parseKeywords(raw) {
   return safeText(raw)
     .split(/[\s,，、]+/)
+    .map((s) => s.trim())
+    .filter(Boolean);
+}
+
+function parseKeywordsForChips(raw) {
+  return safeText(raw)
+    .split(/[\n,，]+/)
     .map((s) => s.trim())
     .filter(Boolean);
 }
@@ -193,11 +202,6 @@ function cardHeaderTemplate(card, actionsHTML = '') {
   `;
 }
 
-function buildRuleSummary(rule) {
-  const keywords = parseKeywords(rule.keywords).slice(0, 3).join('、');
-  return keywords || '依條件與商店類型適用';
-}
-
 function renderSearchResult(items, query) {
   const container = document.getElementById('search-results');
   const empty = document.getElementById('search-empty');
@@ -241,18 +245,44 @@ function renderManageList() {
   container.innerHTML = cardsState
     .map((card) => {
       const rows = card.rules
-        .map((rule) => `
+        .map((rule) => {
+          const chips = parseKeywordsForChips(rule.keywords);
+          const ruleKey = `${card.id}__${rule.id}`;
+          const isExpanded = expandedRuleKeywords.has(ruleKey);
+          const visibleCount = isExpanded ? chips.length : Math.min(MANAGE_RULE_CHIP_LIMIT, chips.length);
+          const hiddenCount = chips.length - visibleCount;
+          const controlChip =
+            chips.length > MANAGE_RULE_CHIP_LIMIT
+              ? `<button type="button" class="chip chip-control" data-chip-toggle="${escapeHTML(ruleKey)}">${
+                  isExpanded ? '收合' : `＋${hiddenCount}`
+                }</button>`
+              : '';
+          const channelArea = chips.length
+            ? `
+              <div class="rule-channel-label">適用通路</div>
+              <div class="rule-chip-list">
+                ${chips
+                  .slice(0, visibleCount)
+                  .map((chip) => `<span class="chip">${escapeHTML(chip)}</span>`)
+                  .join('')}
+                ${controlChip}
+              </div>
+            `
+            : '<div class="rule-channel">依條件與商店類型適用</div>';
+
+          return `
           <div class="rule-row">
             <div>
               <div class="rule-title">${escapeHTML(rule.category || '未分類回饋')}</div>
-              <div class="rule-channel">${escapeHTML(buildRuleSummary(rule))}</div>
+              ${channelArea}
             </div>
             <div class="rule-metrics">
               <div class="rate-text">${escapeHTML(rewardText(rule))}</div>
               <div class="weight-text">權重：${equivalentRate(rule, card.name).toFixed(2)}%</div>
             </div>
           </div>
-        `)
+        `;
+        })
         .join('');
 
       return `
@@ -386,6 +416,14 @@ function bindEvents() {
   document.getElementById('manage-list').addEventListener('click', (e) => {
     const editId = e.target.getAttribute('data-edit-id');
     const delId = e.target.getAttribute('data-del-id');
+    const ruleToggle = e.target.getAttribute('data-chip-toggle');
+
+    if (ruleToggle) {
+      if (expandedRuleKeywords.has(ruleToggle)) expandedRuleKeywords.delete(ruleToggle);
+      else expandedRuleKeywords.add(ruleToggle);
+      renderManageList();
+      return;
+    }
 
     if (editId) openEditor(editId);
     if (delId) {
