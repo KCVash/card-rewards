@@ -61,7 +61,7 @@ body {
 }
 .input-icon { padding-left: 12px; color: #7591ca; }
 
-input, textarea {
+input, textarea, select {
   width: 100%;
   border: 1px solid #c8d2ec;
   border-radius: 10px;
@@ -72,6 +72,24 @@ input, textarea {
 .search-wrap input { border: 0; box-shadow: none; padding: 12px 8px; }
 .search-wrap input:focus { outline: none; }
 .icon-btn { border: 0; background: transparent; color: #8692ab; padding: 8px 12px; cursor: pointer; font-size: .95rem; }
+
+
+.select-wrap { position: relative; }
+.select-wrap::after {
+  content: '▾';
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #5f6f92;
+  pointer-events: none;
+  font-size: .9rem;
+}
+select {
+  appearance: none;
+  -webkit-appearance: none;
+  padding-right: 32px;
+}
 
 label { font-size: .9rem; color: var(--muted); display: block; margin-bottom: 6px; }
 textarea { min-height: 72px; resize: vertical; }
@@ -95,16 +113,57 @@ button.outline { background: #fff; border: 1px solid var(--border); }
 
 .manage-title-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
 
-.result-top { display: flex; justify-content: space-between; gap: 10px; align-items: flex-start; }
-.title { font-weight: 800; }
-.reward-main { font-size: 1.35rem; line-height: 1.15; font-weight: 800; color: #0445ce; text-align: right; }
-.reward-tag { margin-top: 2px; font-size: .8rem; color: #4d6598; text-align: right; }
-.rule-line { margin-top: 6px; font-size: .95rem; }
-.keywords-title { margin-top: 8px; font-size: .93rem; color: var(--muted); font-weight: 700; }
-.notice { margin-top: 8px; color: #34589d; font-size: .9rem; }
-
 .manage-actions { display: inline-flex; gap: 6px; }
-.icon-action { background: #f3f6ff; padding: 6px 8px; border-radius: 8px; }
+.icon-action { background: rgba(255, 255, 255, 0.28); color: #fff; padding: 6px 8px; border-radius: 8px; border: 1px solid rgba(255, 255, 255, 0.35); }
+.icon-action.danger { background: rgba(126, 16, 16, 0.25); }
+
+.credit-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  margin-bottom: 12px;
+  box-shadow: 0 10px 20px rgba(28, 41, 70, 0.08);
+  overflow: hidden;
+}
+
+.credit-card-header {
+  color: #fff;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.credit-card-header[data-color="藍色系"] { background: linear-gradient(135deg, #2a63dc, #3f8dff); }
+.credit-card-header[data-color="綠色系"] { background: linear-gradient(135deg, #1f8d67, #30b575); }
+.credit-card-header[data-color="紅色系"] { background: linear-gradient(135deg, #ba2d4f, #ea4b4b); }
+.credit-card-header[data-color="紫色系"] { background: linear-gradient(135deg, #6848c9, #9f65e8); }
+.credit-card-header[data-color="金黃色系"] { background: linear-gradient(135deg, #b9891f, #d7af45); }
+.credit-card-header[data-color="黑色系"] { background: linear-gradient(135deg, #1f2430, #424956); }
+.credit-card-header[data-color="銀灰色系"] { background: linear-gradient(135deg, #768296, #9ea9b8); }
+
+.bank-name { font-size: .82rem; opacity: .92; }
+.card-name { font-size: 1.08rem; font-weight: 800; margin-top: 2px; }
+
+.credit-card-body { padding: 12px 14px; }
+.card-section-title { font-size: .92rem; font-weight: 800; color: #495777; margin-bottom: 8px; }
+
+.rules-list { border: 1px solid #e5eaf5; border-radius: 12px; overflow: hidden; }
+.rule-row { display: flex; justify-content: space-between; gap: 10px; padding: 10px 12px; background: #fff; }
+.rule-row + .rule-row { border-top: 1px solid #e8edf7; }
+.rule-title { font-weight: 700; font-size: .95rem; }
+.rule-channel { margin-top: 4px; font-size: .83rem; color: #72809b; }
+.rule-metrics { text-align: right; }
+.rate-text { font-size: 1.1rem; font-weight: 800; color: #cb2b2b; }
+.weight-text { margin-top: 2px; font-size: .79rem; color: #6f7a91; }
+
+.result-body-top { display: flex; justify-content: space-between; gap: 12px; align-items: flex-start; }
+.info-label { font-size: .82rem; color: #75829b; }
+.info-main { font-weight: 700; margin-top: 2px; }
+.reward-highlight { font-size: 1.45rem; font-weight: 900; line-height: 1.15; color: #cb2b2b; }
+.rule-subline { margin-top: 7px; font-size: .9rem; color: #4c5978; }
 
 mark { background: var(--highlight); border-radius: 4px; padding: 0 2px; }
 
@@ -152,6 +211,9 @@ mark { background: var(--highlight); border-radius: 4px; padding: 0 2px; }
 @media (max-width: 560px) {
   .row.two { grid-template-columns: 1fr; }
   .manage-title-row { align-items: flex-start; flex-direction: column; }
+  .rule-row,
+  .result-body-top { flex-direction: column; }
+  .rule-metrics { text-align: left; }
 }
 
 @media (min-width: 768px) {

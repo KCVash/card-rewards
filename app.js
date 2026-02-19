@@ -4,6 +4,18 @@ let cardsState = [];
 let currentTab = 'search';
 let editCardId = null;
 
+const CARD_COLOR_OPTIONS = [
+  '藍色系',
+  '綠色系',
+  '紅色系',
+  '紫色系',
+  '金黃色系',
+  '黑色系',
+  '銀灰色系',
+];
+
+const DEFAULT_CARD_COLOR = '藍色系';
+
 function uid(prefix = 'id') {
   return `${prefix}_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
 }
@@ -86,6 +98,7 @@ function normalizeCards(cards) {
     id: safeText(card?.id).trim() || uid('card'),
     bank: safeText(card?.bank).trim(),
     name: safeText(card?.name).trim(),
+    color: CARD_COLOR_OPTIONS.includes(safeText(card?.color).trim()) ? safeText(card?.color).trim() : DEFAULT_CARD_COLOR,
     rules: (Array.isArray(card?.rules) ? card.rules : []).map((rule) => ({
       id: safeText(rule?.id).trim() || uid('rule'),
       category: safeText(rule?.category).trim(),
@@ -163,6 +176,24 @@ function flattenMatches(query) {
   return rows.sort((a, b) => b.equivalentRate - a.equivalentRate);
 }
 
+
+function cardHeaderTemplate(card, actionsHTML = '') {
+  return `
+    <header class="credit-card-header" data-color="${escapeHTML(card.color || DEFAULT_CARD_COLOR)}">
+      <div>
+        <div class="bank-name">${escapeHTML(card.bank || '未填寫發卡銀行')}</div>
+        <div class="card-name">${escapeHTML(card.name || '未命名信用卡')}</div>
+      </div>
+      ${actionsHTML ? `<div class="manage-actions">${actionsHTML}</div>` : ''}
+    </header>
+  `;
+}
+
+function buildRuleSummary(rule) {
+  const keywords = parseKeywords(rule.keywords).slice(0, 3).join('、');
+  return keywords || '依條件與商店類型適用';
+}
+
 function renderSearchResult(items, query) {
   const container = document.getElementById('search-results');
   const empty = document.getElementById('search-empty');
@@ -177,22 +208,20 @@ function renderSearchResult(items, query) {
   empty.style.display = 'none';
   container.innerHTML = items
     .map(({ card, rule, keywordList, equivalentRate: rate }) => `
-      <article class="card-box">
-        <div class="result-top">
-          <div>
-            <div class="title">${escapeHTML(card.bank)} ${escapeHTML(card.name)}</div>
-            <div class="rule-line">回饋率：${escapeHTML(rewardText(rule))}</div>
-            <div class="rule-line">權重約 ${rate.toFixed(2)}%</div>
+      <article class="credit-card">
+        ${cardHeaderTemplate(card)}
+        <div class="credit-card-body">
+          <div class="result-body-top">
+            <div>
+              <div class="info-label">回饋類型</div>
+              <div class="info-main">${escapeHTML(rule.category || '一般回饋')}</div>
+            </div>
+            <div class="reward-highlight">${escapeHTML(rewardText(rule))}</div>
           </div>
-          <div>
-            <div class="reward-main">${escapeHTML(rewardText(rule))}</div>
-            <div class="reward-tag">${escapeHTML(rule.category || '一般回饋')}</div>
-          </div>
+          <div class="rule-subline">權重後回饋：約 ${rate.toFixed(2)}%</div>
+          ${rule.note ? `<div class="rule-subline">使用提醒：${escapeHTML(rule.note)}</div>` : ''}
+          <div class="rule-subline">適用通路：${highlightText(keywordList.join('、'), query) || '-'}</div>
         </div>
-        <div class="notice">需切換【${escapeHTML(rule.category || '指定方案')}】（權重公式：%/360*1000）</div>
-        <div class="keywords-title">匹配關鍵字：</div>
-        <div class="rule-line">${highlightText(keywordList.join('、'), query) || '-'}</div>
-        ${rule.note ? `<div class="rule-line muted">補充說明：${escapeHTML(rule.note)}</div>` : ''}
       </article>
     `)
     .join('');
@@ -207,22 +236,34 @@ function renderManageList() {
 
   container.innerHTML = cardsState
     .map((card) => {
-      const summary = card.rules
-        .map((rule) => `<li>${escapeHTML(rule.category || '未分類')}｜回饋：${escapeHTML(rewardText(rule))}｜權重：${equivalentRate(rule, card.name).toFixed(2)}%</li>`)
-        .join('');
-      return `
-      <article class="card-box">
-        <div class="result-top">
-          <div>
-            <div class="title">${escapeHTML(card.bank)} ${escapeHTML(card.name)}</div>
-            <div class="keywords-title">已設定的回饋規則</div>
+      const rows = card.rules
+        .map((rule) => `
+          <div class="rule-row">
+            <div>
+              <div class="rule-title">${escapeHTML(rule.category || '未分類回饋')}</div>
+              <div class="rule-channel">${escapeHTML(buildRuleSummary(rule))}</div>
+            </div>
+            <div class="rule-metrics">
+              <div class="rate-text">${escapeHTML(rewardText(rule))}</div>
+              <div class="weight-text">權重：${equivalentRate(rule, card.name).toFixed(2)}%</div>
+            </div>
           </div>
-          <div class="manage-actions">
+        `)
+        .join('');
+
+      return `
+      <article class="credit-card">
+        ${cardHeaderTemplate(
+          card,
+          `
             <button class="icon-action" data-edit-id="${card.id}" aria-label="編輯">✏️</button>
             <button class="icon-action danger" data-del-id="${card.id}" aria-label="刪除">🗑️</button>
-          </div>
+          `,
+        )}
+        <div class="credit-card-body">
+          <div class="card-section-title">已設定的回饋規則</div>
+          <div class="rules-list">${rows}</div>
         </div>
-        <ul>${summary}</ul>
       </article>`;
     })
     .join('');
@@ -240,20 +281,20 @@ function ruleEditorTemplate(rule = {}) {
     <div class="row">
       <div>
         <label>回饋類型</label>
-        <input name="category" value="${escapeHTML(rule.category || '')}" placeholder="例如：超商/餐飲/海外" />
+        <input name="category" value="${escapeHTML(rule.category || '')}" placeholder="例如：超商 / 餐飲 / 海外" />
       </div>
       <div class="row two">
         <div>
-          <label>原始回饋 %</label>
+          <label>回饋率</label>
           <input name="percentage" value="${rule.percentage ?? ''}" placeholder="例如：3.8" />
         </div>
         <div>
-          <label>自訂顯示（如：18元/哩）</label>
+          <label>自訂顯示（例如：18元/哩）</label>
           <input name="valueText" value="${escapeHTML(rule.valueText || '')}" placeholder="例如：18元/哩" />
         </div>
       </div>
       <div>
-        <label>關鍵字</label>
+        <label>適用通路關鍵字</label>
         <input name="keywords" value="${escapeHTML(rule.keywords || '')}" placeholder="7-11 超商 ibon" />
       </div>
       <div>
@@ -273,6 +314,7 @@ function openEditor(cardId = null) {
   document.getElementById('editor-title').textContent = card ? '編輯卡片' : '新增卡片';
   document.getElementById('card-bank').value = card?.bank || '';
   document.getElementById('card-name').value = card?.name || '';
+  document.getElementById('card-theme').value = card?.color || DEFAULT_CARD_COLOR;
 
   const rulesContainer = document.getElementById('rules-container');
   rulesContainer.innerHTML = (card?.rules?.length ? card.rules : [{}]).map((r) => ruleEditorTemplate(r)).join('');
@@ -287,7 +329,8 @@ function closeEditor() {
 function collectEditorForm() {
   const bank = document.getElementById('card-bank').value.trim();
   const name = document.getElementById('card-name').value.trim();
-  if (!bank || !name) throw new Error('請填寫發卡銀行與卡片名稱');
+  const color = document.getElementById('card-theme').value || DEFAULT_CARD_COLOR;
+  if (!bank || !name) throw new Error('請填寫發卡銀行與信用卡名稱');
 
   const rules = [...document.querySelectorAll('.rule-editor')]
     .map((el) => {
@@ -305,7 +348,14 @@ function collectEditorForm() {
 
   if (!rules.length) throw new Error('至少需要一條回饋規則');
 
-  return { bank, name, rules };
+  return { bank, name, color, rules };
+}
+
+function initThemeOptions() {
+  const select = document.getElementById('card-theme');
+  if (!select) return;
+  select.innerHTML = CARD_COLOR_OPTIONS.map((color) => `<option value="${color}">${color}</option>`).join('');
+  select.value = DEFAULT_CARD_COLOR;
 }
 
 function bindEvents() {
@@ -378,6 +428,7 @@ function bindEvents() {
 
 async function init() {
   await loadCards();
+  initThemeOptions();
   bindEvents();
   switchTab(currentTab);
   renderManageList();

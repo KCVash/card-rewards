@@ -25,7 +25,7 @@
 
     <section class="tab-content active" data-tab="search">
       <article class="page-head card-box">
-        <h2>今天要刷哪張卡？</h2>
+        <h2>找回饋</h2>
         <p class="muted">已套用 CUBE 卡全方案與專屬權重公式</p>
         <div class="search-wrap">
           <span class="input-icon" aria-hidden="true">🔍</span>
@@ -50,7 +50,7 @@
 
   <nav class="bottom-tabs">
     <button class="active" data-tab="search"><span>🔍</span><span>找回饋</span></button>
-    <button data-tab="manage"><span>👛</span><span>卡包管理</span></button>
+    <button data-tab="manage"><span>👛</span><span>我的卡包管理</span></button>
   </nav>
 
   <section id="editor-modal" class="editor" aria-hidden="true">
@@ -63,17 +63,19 @@
             <input id="card-bank" placeholder="例如：國泰世華" />
           </div>
           <div>
-            <label for="card-name">卡片名稱</label>
+            <label for="card-name">信用卡名稱</label>
             <input id="card-name" placeholder="例如：CUBE 卡" />
           </div>
         </div>
         <div>
           <label for="card-theme">卡面色系</label>
-          <input id="card-theme" placeholder="例如：藍色、黑金（僅作顯示用途）" />
+          <div class="select-wrap">
+            <select id="card-theme"></select>
+          </div>
         </div>
       </article>
 
-      <h3 class="section-title">回饋規則設定</h3>
+      <h3 class="section-title">已設定的回饋規則</h3>
       <div id="rules-container"></div>
 
       <div class="btn-row">
