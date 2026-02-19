@@ -1,0 +1,379 @@
+const STORAGE_KEY = 'my_credit_cards';
+let cardsState = [];
+let currentTab = 'search';
+let editCardId = null;
+
+function uid() {
+  return `card_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+}
+
+function safeText(v) {
+  return (v ?? '').toString();
+}
+
+function norm(v) {
+  return safeText(v).trim().toLowerCase();
+}
+
+function escapeHTML(str) {
+  return safeText(str)
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;')
+    .replaceAll("'", '&#39;');
+}
+
+function parseKeywords(raw) {
+  return safeText(raw)
+    .split(/[\s,，、]+/)
+    .map((s) => s.trim())
+    .filter(Boolean);
+}
+
+function parseNumber(value) {
+  const n = Number(value);
+  return Number.isFinite(n) ? n : null;
+}
+
+function equivalentRate(rule, cardName) {
+  const percentage = parseNumber(rule.percentage) ?? 0;
+  let rate = percentage;
+
+  const valueText = safeText(rule.valueText);
+  if (/元\s*\/?\s*哩|元\s*1\s*哩/.test(valueText)) {
+    const matched = valueText.match(/(\d+(?:\.\d+)?)/);
+    if (matched) {
+      const n = Number(matched[1]);
+      if (n > 0) rate = (1 / n) * 100;
+    }
+  }
+
+  if (cardName.includes('CUBE') && percentage > 0) rate = (percentage / 360) * 1000;
+  else if (cardName.includes('Live+') && percentage > 0) rate = percentage * 2;
+  else if (cardName.includes('GoGo') && percentage > 0) rate = (percentage / 11) * 13;
+  else if (cardName.includes('旅人')) rate = (1 / 18) * 100;
+  else if (cardName.includes('飛行')) rate = (1 / 22) * 100;
+
+  return Number.isFinite(rate) ? rate : 0;
+}
+
+function rewardText(rule) {
+  const p = parseNumber(rule.percentage);
+  if (p !== null) return `${p}%`;
+  return safeText(rule.valueText) || '-';
+}
+
+function highlightText(text, query) {
+  const source = safeText(text);
+  const q = norm(query);
+  if (!q) return escapeHTML(source);
+  const escaped = q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const rgx = new RegExp(escaped, 'ig');
+  return escapeHTML(source).replace(rgx, (m) => `<mark>${m}</mark>`);
+}
+
+function isNewCardsShape(data) {
+  return Array.isArray(data) && data.every((it) => typeof it === 'object' && Array.isArray(it.rules));
+}
+
+function convertLegacyData(legacyRows) {
+  const map = new Map();
+  for (const row of legacyRows || []) {
+    const bank = safeText(row.bank).trim() || '未分類銀行';
+    const name = safeText(row.card).trim() || '未命名卡片';
+    const key = `${bank}__${name}`;
+    if (!map.has(key)) map.set(key, { id: uid(), bank, name, rules: [] });
+
+    map.get(key).rules.push({
+      id: uid(),
+      category: safeText(row.merchant).trim(),
+      percentage: parseNumber(row.reward),
+      valueText: '',
+      keywords: safeText(row.merchant).trim(),
+      note: safeText(row.note).trim(),
+    });
+  }
+  return [...map.values()];
+}
+
+function normalizeCards(cards) {
+  return (cards || []).map((card) => ({
+    id: card.id || uid(),
+    bank: safeText(card.bank).trim(),
+    name: safeText(card.name).trim(),
+    rules: (card.rules || []).map((rule) => ({
+      id: rule.id || uid(),
+      category: safeText(rule.category).trim(),
+      percentage: rule.percentage === '' ? null : parseNumber(rule.percentage),
+      valueText: safeText(rule.valueText).trim(),
+      keywords: Array.isArray(rule.keywords) ? rule.keywords.join(', ') : safeText(rule.keywords).trim(),
+      note: safeText(rule.note).trim(),
+    })),
+  }));
+}
+
+function saveCards() {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(cardsState));
+}
+
+async function loadCards() {
+  const localData = localStorage.getItem(STORAGE_KEY);
+  if (localData) {
+    cardsState = normalizeCards(JSON.parse(localData));
+    return;
+  }
+
+  const res = await fetch('./cards.json', { cache: 'no-store' });
+  if (!res.ok) throw new Error('讀取 cards.json 失敗');
+
+  const payload = await res.json();
+  cardsState = isNewCardsShape(payload) ? normalizeCards(payload) : convertLegacyData(payload);
+  saveCards();
+}
+
+function flattenMatches(query) {
+  const q = norm(query);
+  if (!q) return [];
+  const rows = [];
+
+  for (const card of cardsState) {
+    for (const rule of card.rules) {
+      const category = norm(rule.category);
+      const keywords = parseKeywords(rule.keywords);
+      const hitCategory = category.includes(q);
+      const hitKeyword = keywords.some((kw) => norm(kw).includes(q));
+      if (!hitCategory && !hitKeyword) continue;
+
+      rows.push({
+        card,
+        rule,
+        keywordList: keywords,
+        equivalentRate: equivalentRate(rule, card.name),
+      });
+    }
+  }
+
+  return rows.sort((a, b) => b.equivalentRate - a.equivalentRate);
+}
+
+function renderSearchResult(items, query) {
+  const container = document.getElementById('search-results');
+  const empty = document.getElementById('search-empty');
+
+  if (!items.length) {
+    container.innerHTML = '';
+    empty.style.display = 'block';
+    empty.textContent = query ? `找不到「${query}」相關回饋。` : '請輸入關鍵字開始搜尋。';
+    return;
+  }
+
+  empty.style.display = 'none';
+  container.innerHTML = items
+    .map(({ card, rule, keywordList, equivalentRate }) => `
+      <article class="card-box">
+        <div class="result-top">
+          <div>
+            <div class="title">${escapeHTML(card.bank)}｜${escapeHTML(card.name)}</div>
+            <div class="meta">分類：${highlightText(rule.category, query)}</div>
+          </div>
+          <div class="reward">權重約 ${equivalentRate.toFixed(2)}%</div>
+        </div>
+        <div class="rule-line">回饋：${escapeHTML(rewardText(rule))}</div>
+        <div class="rule-line">關鍵字：${highlightText(keywordList.join(', '), query) || '-'}</div>
+        ${rule.note ? `<div class="rule-line muted">備註：${escapeHTML(rule.note)}</div>` : ''}
+      </article>
+    `)
+    .join('');
+}
+
+function renderManageList() {
+  const container = document.getElementById('manage-list');
+  if (!cardsState.length) {
+    container.innerHTML = '<div class="muted">目前沒有卡片，請新增。</div>';
+    return;
+  }
+
+  container.innerHTML = cardsState
+    .map((card) => {
+      const summary = card.rules
+        .map((rule) => `<li>${escapeHTML(rule.category || '未分類')}｜${escapeHTML(rewardText(rule))}｜權重約 ${equivalentRate(rule, card.name).toFixed(2)}%</li>`)
+        .join('');
+      return `
+      <article class="card-box">
+        <div class="result-top">
+          <div>
+            <div class="title">${escapeHTML(card.bank)}｜${escapeHTML(card.name)}</div>
+            <div class="meta">共 ${card.rules.length} 條規則</div>
+          </div>
+          <div class="btn-row">
+            <button class="outline" data-edit-id="${card.id}">編輯</button>
+            <button class="danger" data-del-id="${card.id}">刪除</button>
+          </div>
+        </div>
+        <ul>${summary}</ul>
+      </article>`;
+    })
+    .join('');
+}
+
+function switchTab(tab) {
+  currentTab = tab;
+  document.querySelectorAll('.tab-content').forEach((el) => el.classList.toggle('active', el.dataset.tab === tab));
+  document.querySelectorAll('.bottom-tabs button').forEach((el) => el.classList.toggle('active', el.dataset.tab === tab));
+}
+
+function ruleEditorTemplate(rule = {}) {
+  return `
+  <section class="card-box rule-editor">
+    <div class="row">
+      <div>
+        <label>分類 category</label>
+        <input name="category" value="${escapeHTML(rule.category || '')}" placeholder="例如：超商/餐飲/海外" />
+      </div>
+      <div class="row two">
+        <div>
+          <label>百分比 percentage（可空）</label>
+          <input name="percentage" value="${rule.percentage ?? ''}" placeholder="例如：3.8" />
+        </div>
+        <div>
+          <label>valueText（可空）</label>
+          <input name="valueText" value="${escapeHTML(rule.valueText || '')}" placeholder="例如：18元/哩" />
+        </div>
+      </div>
+      <div>
+        <label>keywords（逗號/空白分隔）</label>
+        <input name="keywords" value="${escapeHTML(rule.keywords || '')}" placeholder="7-11 超商 ibon" />
+      </div>
+      <div>
+        <label>備註 note</label>
+        <textarea name="note" placeholder="限制與條件">${escapeHTML(rule.note || '')}</textarea>
+      </div>
+      <div class="btn-row">
+        <button type="button" class="danger remove-rule">刪除這條規則</button>
+      </div>
+    </div>
+  </section>`;
+}
+
+function openEditor(cardId = null) {
+  editCardId = cardId;
+  const card = cardsState.find((it) => it.id === cardId);
+  document.getElementById('editor-title').textContent = card ? '編輯卡片' : '新增卡片';
+  document.getElementById('card-bank').value = card?.bank || '';
+  document.getElementById('card-name').value = card?.name || '';
+
+  const rulesContainer = document.getElementById('rules-container');
+  rulesContainer.innerHTML = (card?.rules?.length ? card.rules : [{}]).map((r) => ruleEditorTemplate(r)).join('');
+  document.getElementById('editor-modal').classList.add('show');
+}
+
+function closeEditor() {
+  document.getElementById('editor-modal').classList.remove('show');
+  editCardId = null;
+}
+
+function collectEditorForm() {
+  const bank = document.getElementById('card-bank').value.trim();
+  const name = document.getElementById('card-name').value.trim();
+  if (!bank || !name) throw new Error('請填寫 bank 與 card name');
+
+  const rules = [...document.querySelectorAll('.rule-editor')]
+    .map((el) => {
+      const percentageValue = el.querySelector('input[name="percentage"]').value.trim();
+      return {
+        id: uid(),
+        category: el.querySelector('input[name="category"]').value.trim(),
+        percentage: percentageValue === '' ? null : parseNumber(percentageValue),
+        valueText: el.querySelector('input[name="valueText"]').value.trim(),
+        keywords: el.querySelector('input[name="keywords"]').value.trim(),
+        note: el.querySelector('textarea[name="note"]').value.trim(),
+      };
+    })
+    .filter((rule) => rule.category || rule.keywords || rule.percentage !== null || rule.valueText || rule.note);
+
+  if (!rules.length) throw new Error('至少需要一條 rule');
+
+  return { bank, name, rules };
+}
+
+function bindEvents() {
+  document.getElementById('search-btn').addEventListener('click', () => {
+    const q = document.getElementById('search-input').value;
+    renderSearchResult(flattenMatches(q), q);
+  });
+
+  document.getElementById('search-input').addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') document.getElementById('search-btn').click();
+  });
+
+  document.querySelectorAll('.bottom-tabs button').forEach((btn) => {
+    btn.addEventListener('click', () => switchTab(btn.dataset.tab));
+  });
+
+  document.getElementById('manage-list').addEventListener('click', (e) => {
+    const editId = e.target.getAttribute('data-edit-id');
+    const delId = e.target.getAttribute('data-del-id');
+
+    if (editId) openEditor(editId);
+    if (delId) {
+      const card = cardsState.find((it) => it.id === delId);
+      if (card && confirm(`確定刪除 ${card.bank}｜${card.name} ?`)) {
+        cardsState = cardsState.filter((it) => it.id !== delId);
+        saveCards();
+        renderManageList();
+      }
+    }
+  });
+
+  document.getElementById('add-card-btn').addEventListener('click', () => openEditor());
+  document.getElementById('editor-close').addEventListener('click', closeEditor);
+  document.getElementById('add-rule-btn').addEventListener('click', () => {
+    document.getElementById('rules-container').insertAdjacentHTML('beforeend', ruleEditorTemplate());
+  });
+
+  document.getElementById('rules-container').addEventListener('click', (e) => {
+    if (e.target.classList.contains('remove-rule')) {
+      const all = document.querySelectorAll('.rule-editor');
+      if (all.length === 1) return;
+      e.target.closest('.rule-editor').remove();
+    }
+  });
+
+  document.getElementById('editor-save').addEventListener('click', () => {
+    try {
+      const payload = collectEditorForm();
+      if (editCardId) {
+        cardsState = cardsState.map((card) => (card.id === editCardId ? { ...card, ...payload } : card));
+      } else {
+        cardsState.unshift({ id: uid(), ...payload });
+      }
+      saveCards();
+      renderManageList();
+      closeEditor();
+      switchTab('manage');
+    } catch (error) {
+      alert(error.message);
+    }
+  });
+
+  document.getElementById('reset-storage-btn').addEventListener('click', () => {
+    if (!confirm('確定要清除 localStorage 並重新載入 cards.json？')) return;
+    localStorage.removeItem(STORAGE_KEY);
+    location.reload();
+  });
+}
+
+async function init() {
+  try {
+    await loadCards();
+    bindEvents();
+    switchTab(currentTab);
+    renderManageList();
+    renderSearchResult([], '');
+  } catch (err) {
+    document.body.innerHTML = `<main class="app"><h1>初始化失敗</h1><p>${escapeHTML(err.message)}</p></main>`;
+  }
+}
+
+init();
