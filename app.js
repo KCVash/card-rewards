@@ -152,6 +152,12 @@ function highlightText(text, query) {
   return escapeHTML(source).replace(rgx, (m) => `<mark>${m}</mark>`);
 }
 
+
+function iconSVG(name, extraClass = '') {
+  const cls = extraClass ? ` class="${extraClass}"` : '';
+  return `<svg viewBox="0 0 24 24"${cls} aria-hidden="true"><use href="./assets/icons/sprite.svg#icon-${name}"></use></svg>`;
+}
+
 function normalizeCards(cards) {
   return (Array.isArray(cards) ? cards : []).map((card) => ({
     id: safeText(card?.id).trim() || uid('card'),
@@ -268,7 +274,7 @@ function renderSearchResult(items, query) {
               <div class="info-main">${escapeHTML(rule.category || '一般回饋')}</div>
               <div class="rule-channel-label">適用關鍵字</div>
               <div class="rule-subline">${highlightText(keywordList.join('、'), query) || '-'}</div>
-              ${rule.note ? `<div class="rule-note"><span aria-hidden="true">💡</span><span>${escapeHTML(rule.note)}</span></div>` : ''}
+              ${rule.note ? `<div class="rule-note">${iconSVG('category', 'rule-note-icon')}<span>${escapeHTML(rule.note)}</span></div>` : ''}
             </div>
             <div class="rule-metrics-badge">
               <div class="rate-text">${escapeHTML(rewardBadgeMainText(rule))}</div>
@@ -322,7 +328,7 @@ function renderManageList() {
             <div class="rule-main-block">
               <div class="rule-title">${escapeHTML(rule.category || '未分類回饋')}</div>
               ${channelArea}
-              ${rule.note ? `<div class="rule-note"><span aria-hidden="true">💡</span><span>${escapeHTML(rule.note)}</span></div>` : ''}
+              ${rule.note ? `<div class="rule-note">${iconSVG('category', 'rule-note-icon')}<span>${escapeHTML(rule.note)}</span></div>` : ''}
             </div>
             <div class="rule-metrics-badge">
               <div class="rate-text">${escapeHTML(rewardBadgeMainText(rule))}</div>
@@ -339,8 +345,8 @@ function renderManageList() {
         ${cardHeaderTemplate(
           card,
           `
-            <button class="icon-action" data-edit-id="${card.id}" aria-label="編輯">✏️</button>
-            <button class="icon-action danger" data-del-id="${card.id}" aria-label="刪除">🗑️</button>
+            <button class="icon-action" data-edit-id="${card.id}" aria-label="編輯">${iconSVG('edit')}</button>
+            <button class="icon-action danger" data-del-id="${card.id}" aria-label="刪除">${iconSVG('trash')}</button>
           `,
         )}
         <div class="credit-card-body">

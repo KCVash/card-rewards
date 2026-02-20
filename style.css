@@ -59,7 +59,8 @@ body {
   border: 1px solid #cfdaef;
   box-shadow: 0 8px 20px rgba(37, 61, 116, 0.11);
 }
-.input-icon { padding-left: 12px; color: #7591ca; }
+.input-icon { padding-left: 12px; color: #7591ca; display: inline-flex; align-items: center; justify-content: center; }
+.input-icon svg { width: 20px; height: 20px; stroke: currentColor; fill: none; }
 
 input, textarea, select {
   width: 100%;
@@ -71,7 +72,8 @@ input, textarea, select {
 }
 .search-wrap input { border: 0; box-shadow: none; padding: 12px 8px; }
 .search-wrap input:focus { outline: none; }
-.icon-btn { border: 0; background: transparent; color: #8692ab; padding: 8px 12px; cursor: pointer; font-size: .95rem; }
+.icon-btn { border: 0; background: transparent; color: #8692ab; width: 40px; height: 40px; display: inline-flex; align-items: center; justify-content: center; padding: 0; cursor: pointer; }
+.icon-btn svg { width: 20px; height: 20px; stroke: currentColor; fill: none; }
 
 
 .select-wrap { position: relative; }
@@ -118,7 +120,8 @@ button.outline { background: #fff; border: 1px solid var(--border); }
 .manage-head-actions { display: flex; gap: 8px; flex-wrap: wrap; }
 
 .manage-actions { display: inline-flex; gap: 6px; }
-.icon-action { background: rgba(255, 255, 255, 0.28); color: #fff; padding: 6px 8px; border-radius: 8px; border: 1px solid rgba(255, 255, 255, 0.35); }
+.icon-action { background: rgba(255, 255, 255, 0.28); color: #fff; width: 40px; height: 40px; padding: 0; border-radius: 10px; border: 1px solid rgba(255, 255, 255, 0.35); display: inline-flex; align-items: center; justify-content: center; }
+.icon-action svg { width: 20px; height: 20px; stroke: currentColor; fill: none; }
 .icon-action.danger { background: rgba(126, 16, 16, 0.25); }
 
 .credit-card {
@@ -199,6 +202,7 @@ button.outline { background: #fff; border: 1px solid var(--border); }
   font-size: .82rem;
   color: #5f6d8c;
 }
+.rule-note-icon { width: 20px; height: 20px; flex: 0 0 auto; margin-top: 1px; stroke: currentColor; fill: none; }
 
 mark { background: var(--highlight); border-radius: 4px; padding: 0 2px; }
 
@@ -216,22 +220,24 @@ mark { background: var(--highlight); border-radius: 4px; padding: 0 2px; }
 }
 .bottom-tabs button {
   width: 100%;
+  min-height: 40px;
   background: #fff;
   color: #8c96aa;
   display: flex;
   flex-direction: column;
   align-items: center;
+  justify-content: center;
   gap: 2px;
 }
 .bottom-tabs button.active { color: var(--primary); }
 .tab-icon {
-  width: 20px;
-  height: 20px;
+  width: 24px;
+  height: 24px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
 }
-.tab-icon svg { width: 20px; height: 20px; }
+.tab-icon svg { width: 24px; height: 24px; stroke: currentColor; fill: none; }
 
 .editor {
   position: fixed;
@@ -261,14 +267,17 @@ mark { background: var(--highlight); border-radius: 4px; padding: 0 2px; }
   width: 40px;
   height: 40px;
   min-width: 40px;
-  border-radius: 12px;
+  border-radius: 999px;
   border: 1px solid var(--border);
   background: #f7faff;
   box-shadow: 0 4px 10px rgba(25, 46, 94, 0.1);
   color: #5d6d91;
-  font-size: 1rem;
-  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
 }
+.editor-close-x svg { width: 20px; height: 20px; stroke: currentColor; fill: none; }
 .reward-toggle {
   display: inline-flex;
   border: 1px solid #cfd9ef;
