@@ -224,6 +224,14 @@ mark { background: var(--highlight); border-radius: 4px; padding: 0 2px; }
   gap: 2px;
 }
 .bottom-tabs button.active { color: var(--primary); }
+.tab-icon {
+  width: 20px;
+  height: 20px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.tab-icon svg { width: 20px; height: 20px; }
 
 .editor {
   position: fixed;
@@ -241,6 +249,48 @@ mark { background: var(--highlight); border-radius: 4px; padding: 0 2px; }
   border-radius: 14px;
   padding: 14px;
 }
+.editor-header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+.editor-header-row h2 { margin: 0; }
+.editor-close-x {
+  width: 40px;
+  height: 40px;
+  min-width: 40px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: #f7faff;
+  box-shadow: 0 4px 10px rgba(25, 46, 94, 0.1);
+  color: #5d6d91;
+  font-size: 1rem;
+  line-height: 1;
+}
+.reward-toggle {
+  display: inline-flex;
+  border: 1px solid #cfd9ef;
+  border-radius: 12px;
+  background: #f4f7ff;
+  padding: 3px;
+  gap: 4px;
+}
+.reward-option {
+  background: transparent;
+  color: #52658f;
+  border-radius: 9px;
+  border: 0;
+  font-weight: 700;
+  padding: 8px 10px;
+}
+.reward-option.active {
+  background: #fff;
+  color: #1f4eb2;
+  box-shadow: 0 2px 6px rgba(25, 46, 94, 0.12);
+}
+.reward-field.hidden { display: none; }
 .section-title { margin: 8px 0; font-size: 1rem; }
 
 @media (max-width: 560px) {
@@ -251,12 +301,25 @@ mark { background: var(--highlight); border-radius: 4px; padding: 0 2px; }
   .rate-text { font-size: 1rem; }
   .value-text,
   .weight-text { font-size: .69rem; }
+  .reward-toggle { width: 100%; }
+  .reward-option { flex: 1; }
 }
 
 @media (max-width: 390px) {
   .rule-layout,
-  .rule-row { gap: 8px; }
-  .rule-metrics-badge { min-width: 108px; max-width: 120px; padding: 6px 7px; border-radius: 12px; }
+  .rule-row {
+    gap: 8px;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: start;
+  }
+  .rule-metrics-badge {
+    min-width: 92px;
+    max-width: 112px;
+    padding: 6px 7px;
+    border-radius: 12px;
+    justify-self: end;
+    text-align: right;
+  }
   .rate-text { font-size: .94rem; }
   .rule-subline { font-size: .84rem; }
   .chip { padding: 3px 8px; font-size: .74rem; }
