@@ -484,10 +484,23 @@ function bindEvents() {
     btn.addEventListener('click', () => switchTab(btn.dataset.tab));
   });
 
+  const getManageActionTarget = (event) => {
+    if (event.target instanceof Element) {
+      const closestTarget = event.target.closest('[data-edit-id], [data-del-id], [data-chip-toggle]');
+      if (closestTarget) return closestTarget;
+    }
+
+    const path = typeof event.composedPath === 'function' ? event.composedPath() : [];
+    return path.find((node) => node instanceof Element && node.matches('[data-edit-id], [data-del-id], [data-chip-toggle]')) || null;
+  };
+
   document.getElementById('manage-list').addEventListener('click', (e) => {
-    const editId = e.target.getAttribute('data-edit-id');
-    const delId = e.target.getAttribute('data-del-id');
-    const ruleToggle = e.target.getAttribute('data-chip-toggle');
+    const actionTarget = getManageActionTarget(e);
+    if (!actionTarget) return;
+
+    const editId = actionTarget.getAttribute('data-edit-id');
+    const delId = actionTarget.getAttribute('data-del-id');
+    const ruleToggle = actionTarget.getAttribute('data-chip-toggle');
 
     if (ruleToggle) {
       if (expandedRuleKeywords.has(ruleToggle)) expandedRuleKeywords.delete(ruleToggle);
