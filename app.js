@@ -87,12 +87,17 @@ function equivalentRate(rule, cardName) {
   return Number.isFinite(rate) ? rate : 0;
 }
 
-function rewardText(rule) {
-  const p = parseNumber(rule.percentage);
+function rewardBadgeMainText(rule) {
+  const percentage = parseNumber(rule.percentage) ?? 0;
   const valueText = safeText(rule.valueText).trim();
-  if (p === 0 && valueText) return valueText;
-  if (p !== null) return `${p}%`;
+  if (percentage > 0) return `${percentage}%`;
   return valueText || '-';
+}
+
+function rewardBadgeSubText(rule) {
+  const percentage = parseNumber(rule.percentage) ?? 0;
+  if (percentage > 0) return safeText(rule.valueText).trim();
+  return '';
 }
 
 function highlightText(text, query) {
@@ -221,18 +226,20 @@ function renderSearchResult(items, query) {
       <article class="credit-card">
         ${cardHeaderTemplate(card)}
         <div class="credit-card-body">
-          <div class="result-rule-row">
-            <div>
+          <div class="rule-layout">
+            <div class="rule-main-block">
               <div class="info-label">回饋類型</div>
               <div class="info-main">${escapeHTML(rule.category || '一般回饋')}</div>
-              <div class="rule-subline">適用通路：${highlightText(keywordList.join('、'), query) || '-'}</div>
+              <div class="rule-channel-label">適用關鍵字</div>
+              <div class="rule-subline">${highlightText(keywordList.join('、'), query) || '-'}</div>
+              ${rule.note ? `<div class="rule-note"><span aria-hidden="true">💡</span><span>${escapeHTML(rule.note)}</span></div>` : ''}
             </div>
-            <div class="rule-metrics">
-              <div class="rate-text">${escapeHTML(rewardText(rule))}</div>
+            <div class="rule-metrics-badge">
+              <div class="rate-text">${escapeHTML(rewardBadgeMainText(rule))}</div>
+              ${rewardBadgeSubText(rule) ? `<div class="value-text">${escapeHTML(rewardBadgeSubText(rule))}</div>` : ''}
               <div class="weight-text">權重：約 ${rate.toFixed(2)}%</div>
             </div>
           </div>
-          ${rule.note ? `<div class="rule-subline">使用提醒：${escapeHTML(rule.note)}</div>` : ''}
         </div>
       </article>
     `)
@@ -276,12 +283,14 @@ function renderManageList() {
 
           return `
           <div class="rule-row">
-            <div>
+            <div class="rule-main-block">
               <div class="rule-title">${escapeHTML(rule.category || '未分類回饋')}</div>
               ${channelArea}
+              ${rule.note ? `<div class="rule-note"><span aria-hidden="true">💡</span><span>${escapeHTML(rule.note)}</span></div>` : ''}
             </div>
-            <div class="rule-metrics">
-              <div class="rate-text">${escapeHTML(rewardText(rule))}</div>
+            <div class="rule-metrics-badge">
+              <div class="rate-text">${escapeHTML(rewardBadgeMainText(rule))}</div>
+              ${rewardBadgeSubText(rule) ? `<div class="value-text">${escapeHTML(rewardBadgeSubText(rule))}</div>` : ''}
               <div class="weight-text">權重：${equivalentRate(rule, card.name).toFixed(2)}%</div>
             </div>
           </div>
