@@ -34,21 +34,21 @@
       {
         "category": "慶生月",
         "percentage": 10,
-        "valueText": "10%",
+        "valueText": "",
         "keywords": "慶生,生日,錢櫃,好樂迪,星聚點,享溫馨,東京迪士尼,大阪環球影城,USJ,PlayStation,Nintendo,礁溪庄櫻桃谷,碳佐麻里,屋馬,茶六,茹絲葵",
         "note": "限生日當月切換【慶生月】"
       },
       {
         "category": "瘋大港",
         "percentage": 3.5,
-        "valueText": "3.5%~10%",
+        "valueText": "",
         "keywords": "大港開唱,拓元售票,Klook大港,高雄住宿,駁二",
         "note": "期間限定"
       },
       {
         "category": "童樂匯",
         "percentage": 5,
-        "valueText": "5%~10%",
+        "valueText": "",
         "keywords": "學費,補習班,幼稚園,藥局,卡多摩,丁丁藥局,大樹藥局,麗嬰房,玩具反斗城,功文文教,朱宗慶,雲門舞集,Yamaha音樂,親子餐廳",
         "note": "需符合親子帳戶資格"
       }
@@ -83,7 +83,7 @@
       {
         "category": "餐飲娛樂",
         "percentage": 4.88,
-        "valueText": "4.88%",
+        "valueText": "",
         "keywords": "餐廳,王品,瓦城,爭鮮,麥當勞,星巴克,遠東百貨,SOGO,新光三越,威秀",
         "note": "綁定扣繳有加碼"
       },

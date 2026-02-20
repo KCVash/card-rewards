@@ -58,6 +58,49 @@ function parseNumber(value) {
   return Number.isFinite(n) ? n : null;
 }
 
+function parseAmountPerMile(valueText) {
+  const text = safeText(valueText).trim();
+  if (!text) return null;
+  const matched = text.match(/(\d+(?:\.\d+)?)/);
+  if (!matched) return null;
+  const amount = Number(matched[1]);
+  return Number.isFinite(amount) && amount > 0 ? amount : null;
+}
+
+function formatMilesText(amountPerMile) {
+  const amount = parseNumber(amountPerMile);
+  if (!amount || amount <= 0) return '';
+  return `${amount}元/哩`;
+}
+
+function getRewardMode(rule) {
+  const percentage = parseNumber(rule?.percentage) ?? 0;
+  if (percentage > 0) return 'percentage';
+  const amountPerMile = parseNumber(rule?.amountPerMile);
+  if (amountPerMile && amountPerMile > 0) return 'mile';
+  const parsedAmount = parseAmountPerMile(rule?.valueText);
+  return parsedAmount ? 'mile' : 'percentage';
+}
+
+function normalizeRule(rule) {
+  const normalizedRate = parseNumber(rule?.percentage);
+  const percentage = normalizedRate && normalizedRate > 0 ? normalizedRate : 0;
+  const rawAmountPerMile = parseNumber(rule?.amountPerMile);
+  const amountPerMileFromText = parseAmountPerMile(rule?.valueText);
+  const amountPerMile = rawAmountPerMile && rawAmountPerMile > 0 ? rawAmountPerMile : amountPerMileFromText;
+  const mode = percentage > 0 ? 'percentage' : amountPerMile ? 'mile' : 'percentage';
+
+  return {
+    id: safeText(rule?.id).trim() || uid('rule'),
+    category: safeText(rule?.category).trim(),
+    percentage: mode === 'percentage' ? percentage : 0,
+    amountPerMile: mode === 'mile' ? amountPerMile : null,
+    valueText: mode === 'mile' ? formatMilesText(amountPerMile) : '',
+    keywords: Array.isArray(rule?.keywords) ? rule.keywords.join(', ') : safeText(rule?.keywords).trim(),
+    note: safeText(rule?.note).trim(),
+  };
+}
+
 function setInitMessage(message, isError = false) {
   const el = document.getElementById('init-message');
   if (!el) return;
@@ -69,7 +112,7 @@ function equivalentRate(rule, cardName) {
   const percentage = parseNumber(rule.percentage) ?? 0;
   let rate = percentage;
 
-  const valueText = safeText(rule.valueText);
+  const valueText = formatMilesText(rule.amountPerMile) || safeText(rule.valueText);
   if (/元\s*\/?\s*哩|元\s*1\s*哩/.test(valueText)) {
     const matched = valueText.match(/(\d+(?:\.\d+)?)/);
     if (matched) {
@@ -89,9 +132,9 @@ function equivalentRate(rule, cardName) {
 
 function rewardBadgeMainText(rule) {
   const percentage = parseNumber(rule.percentage) ?? 0;
-  const valueText = safeText(rule.valueText).trim();
+  const valueText = formatMilesText(rule.amountPerMile) || safeText(rule.valueText).trim();
   if (percentage > 0) return `${percentage}%`;
-  return valueText || '-';
+  return valueText || '—';
 }
 
 function rewardBadgeSubText(rule) {
@@ -115,14 +158,7 @@ function normalizeCards(cards) {
     bank: safeText(card?.bank).trim(),
     name: safeText(card?.name).trim(),
     color: CARD_COLOR_OPTIONS.includes(safeText(card?.color).trim()) ? safeText(card?.color).trim() : DEFAULT_CARD_COLOR,
-    rules: (Array.isArray(card?.rules) ? card.rules : []).map((rule) => ({
-      id: safeText(rule?.id).trim() || uid('rule'),
-      category: safeText(rule?.category).trim(),
-      percentage: rule?.percentage === '' ? null : parseNumber(rule?.percentage),
-      valueText: safeText(rule?.valueText).trim(),
-      keywords: Array.isArray(rule?.keywords) ? rule.keywords.join(', ') : safeText(rule?.keywords).trim(),
-      note: safeText(rule?.note).trim(),
-    })),
+    rules: (Array.isArray(card?.rules) ? card.rules : []).map((rule) => normalizeRule(rule)),
   }));
 }
 
@@ -323,6 +359,10 @@ function switchTab(tab) {
 }
 
 function ruleEditorTemplate(rule = {}) {
+  const rewardMode = getRewardMode(rule);
+  const percentageValue = rewardMode === 'percentage' ? rule.percentage ?? '' : '';
+  const amountPerMileValue = rewardMode === 'mile' ? parseNumber(rule.amountPerMile) ?? '' : '';
+
   return `
   <section class="card-box rule-editor">
     <div class="row">
@@ -330,14 +370,22 @@ function ruleEditorTemplate(rule = {}) {
         <label>回饋類型</label>
         <input name="category" value="${escapeHTML(rule.category || '')}" placeholder="例如：超商 / 餐飲 / 海外" />
       </div>
-      <div class="row two">
-        <div>
-          <label>回饋率</label>
-          <input name="percentage" value="${rule.percentage ?? ''}" placeholder="例如：3.8" />
+      <div>
+        <label>回饋形式</label>
+        <div class="reward-toggle" role="tablist" aria-label="回饋形式">
+          <button type="button" class="reward-option ${rewardMode === 'percentage' ? 'active' : ''}" data-reward-mode="percentage">回饋率（%）</button>
+          <button type="button" class="reward-option ${rewardMode === 'mile' ? 'active' : ''}" data-reward-mode="mile">幾元換 1 哩</button>
         </div>
-        <div>
-          <label>自訂顯示（例如：18元/哩）</label>
-          <input name="valueText" value="${escapeHTML(rule.valueText || '')}" placeholder="例如：18元/哩" />
+      </div>
+      <div class="row two">
+        <div class="reward-field ${rewardMode === 'percentage' ? '' : 'hidden'}" data-field="percentage">
+          <label>回饋率（%）</label>
+          <input name="percentage" value="${percentageValue}" placeholder="例如：3.8" ${rewardMode === 'percentage' ? '' : 'disabled'} />
+        </div>
+        <div class="reward-field ${rewardMode === 'mile' ? '' : 'hidden'}" data-field="mile">
+          <label>幾元換 1 哩</label>
+          <input name="amountPerMile" value="${amountPerMileValue}" placeholder="例如：20（代表 20元/哩）" ${rewardMode === 'mile' ? '' : 'disabled'} />
+          <div class="field-helper">例如：20（代表 20元/哩）</div>
         </div>
       </div>
       <div>
@@ -383,16 +431,19 @@ function collectEditorForm() {
   const rules = [...document.querySelectorAll('.rule-editor')]
     .map((el) => {
       const percentageValue = el.querySelector('input[name="percentage"]').value.trim();
+      const amountPerMileValue = el.querySelector('input[name="amountPerMile"]').value.trim();
       return {
         id: uid('rule'),
         category: el.querySelector('input[name="category"]').value.trim(),
-        percentage: percentageValue === '' ? null : parseNumber(percentageValue),
-        valueText: el.querySelector('input[name="valueText"]').value.trim(),
+        percentage: percentageValue === '' ? 0 : parseNumber(percentageValue),
+        amountPerMile: amountPerMileValue === '' ? null : parseNumber(amountPerMileValue),
+        valueText: '',
         keywords: el.querySelector('input[name="keywords"]').value.trim(),
         note: el.querySelector('textarea[name="note"]').value.trim(),
       };
     })
-    .filter((rule) => rule.category || rule.keywords || rule.percentage !== null || rule.valueText || rule.note);
+    .map((rule) => normalizeRule(rule))
+    .filter((rule) => rule.category || rule.keywords || rule.percentage > 0 || (rule.amountPerMile ?? 0) > 0 || rule.note);
 
   if (!rules.length) throw new Error('至少需要一條回饋規則');
 
@@ -463,11 +514,40 @@ function bindEvents() {
     switchTab('manage');
   });
   document.getElementById('editor-close').addEventListener('click', closeEditor);
+  document.getElementById('editor-close-x').addEventListener('click', closeEditor);
   document.getElementById('add-rule-btn').addEventListener('click', () => {
     document.getElementById('rules-container').insertAdjacentHTML('beforeend', ruleEditorTemplate());
   });
 
   document.getElementById('rules-container').addEventListener('click', (e) => {
+    const modeBtn = e.target.closest('[data-reward-mode]');
+    if (modeBtn) {
+      const editor = modeBtn.closest('.rule-editor');
+      if (!editor) return;
+      const mode = modeBtn.dataset.rewardMode;
+      const percentageInput = editor.querySelector('input[name="percentage"]');
+      const mileInput = editor.querySelector('input[name="amountPerMile"]');
+      const percentageField = editor.querySelector('[data-field="percentage"]');
+      const mileField = editor.querySelector('[data-field="mile"]');
+
+      editor.querySelectorAll('[data-reward-mode]').forEach((btn) => btn.classList.toggle('active', btn === modeBtn));
+
+      if (mode === 'percentage') {
+        percentageField.classList.remove('hidden');
+        mileField.classList.add('hidden');
+        percentageInput.disabled = false;
+        mileInput.disabled = true;
+        mileInput.value = '';
+      } else {
+        mileField.classList.remove('hidden');
+        percentageField.classList.add('hidden');
+        mileInput.disabled = false;
+        percentageInput.disabled = true;
+        percentageInput.value = '';
+      }
+      return;
+    }
+
     if (e.target.classList.contains('remove-rule')) {
       const all = document.querySelectorAll('.rule-editor');
       if (all.length === 1) return;
