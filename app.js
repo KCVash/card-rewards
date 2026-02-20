@@ -89,8 +89,10 @@ function equivalentRate(rule, cardName) {
 
 function rewardText(rule) {
   const p = parseNumber(rule.percentage);
+  const valueText = safeText(rule.valueText).trim();
+  if (p === 0 && valueText) return valueText;
   if (p !== null) return `${p}%`;
-  return safeText(rule.valueText) || '-';
+  return valueText || '-';
 }
 
 function highlightText(text, query) {
@@ -219,16 +221,18 @@ function renderSearchResult(items, query) {
       <article class="credit-card">
         ${cardHeaderTemplate(card)}
         <div class="credit-card-body">
-          <div class="result-body-top">
+          <div class="result-rule-row">
             <div>
               <div class="info-label">回饋類型</div>
               <div class="info-main">${escapeHTML(rule.category || '一般回饋')}</div>
+              <div class="rule-subline">適用通路：${highlightText(keywordList.join('、'), query) || '-'}</div>
             </div>
-            <div class="reward-highlight">${escapeHTML(rewardText(rule))}</div>
+            <div class="rule-metrics">
+              <div class="rate-text">${escapeHTML(rewardText(rule))}</div>
+              <div class="weight-text">權重：約 ${rate.toFixed(2)}%</div>
+            </div>
           </div>
-          <div class="rule-subline">權重後回饋：約 ${rate.toFixed(2)}%</div>
           ${rule.note ? `<div class="rule-subline">使用提醒：${escapeHTML(rule.note)}</div>` : ''}
-          <div class="rule-subline">適用通路：${highlightText(keywordList.join('、'), query) || '-'}</div>
         </div>
       </article>
     `)
@@ -332,8 +336,9 @@ function ruleEditorTemplate(rule = {}) {
         <input name="keywords" value="${escapeHTML(rule.keywords || '')}" placeholder="7-11 超商 ibon" />
       </div>
       <div>
-        <label>需切換【XXX】（權重公式：%/360*1000）</label>
+        <label>備註/提示</label>
         <textarea name="note" placeholder="例如：需切換【集精選】">${escapeHTML(rule.note || '')}</textarea>
+        ${rule.note ? '' : '<div class="field-helper">若需要提醒切換權益/方案，請填寫在「備註/提示」欄位。</div>'}
       </div>
       <div class="btn-row">
         <button type="button" class="danger remove-rule">刪除這條規則</button>

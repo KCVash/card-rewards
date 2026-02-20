@@ -155,7 +155,7 @@ button.outline { background: #fff; border: 1px solid var(--border); }
 .card-section-title { font-size: .92rem; font-weight: 800; color: #495777; margin-bottom: 8px; }
 
 .rules-list { border: 1px solid #e5eaf5; border-radius: 12px; overflow: hidden; }
-.rule-row { display: flex; justify-content: space-between; gap: 10px; padding: 10px 12px; background: #fff; }
+.rule-row { position: relative; padding: 10px 12px; background: #fff; min-height: 78px; padding-right: 120px; }
 .rule-row + .rule-row { border-top: 1px solid #e8edf7; }
 .rule-title { font-weight: 700; font-size: .95rem; }
 .rule-channel { margin-top: 4px; font-size: .83rem; color: #72809b; }
@@ -165,14 +165,13 @@ button.outline { background: #fff; border: 1px solid var(--border); }
 .chip-control { background: #e4edff; border-color: #c4d2f3; color: #264f9e; font-weight: 700; cursor: pointer; }
 .chip-control:hover { background: #d8e5ff; }
 .chip-control:active { background: #ccdcff; }
-.rule-metrics { text-align: right; }
+.rule-metrics { position: absolute; top: 10px; right: 12px; text-align: right; }
 .rate-text { font-size: 1.1rem; font-weight: 800; color: #cb2b2b; }
 .weight-text { margin-top: 2px; font-size: .79rem; color: #6f7a91; }
 
-.result-body-top { display: flex; justify-content: space-between; gap: 12px; align-items: flex-start; }
+.result-rule-row { position: relative; min-height: 78px; padding-right: 120px; }
 .info-label { font-size: .82rem; color: #75829b; }
 .info-main { font-weight: 700; margin-top: 2px; }
-.reward-highlight { font-size: 1.45rem; font-weight: 900; line-height: 1.15; color: #cb2b2b; }
 .rule-subline { margin-top: 7px; font-size: .9rem; color: #4c5978; }
 
 mark { background: var(--highlight); border-radius: 4px; padding: 0 2px; }
@@ -223,10 +222,12 @@ mark { background: var(--highlight); border-radius: 4px; padding: 0 2px; }
   .manage-title-row { align-items: flex-start; flex-direction: column; }
   .manage-head-actions { width: 100%; }
   .rule-row,
-  .result-body-top { flex-direction: column; }
-  .rule-metrics { text-align: left; }
+  .result-rule-row { padding-right: 12px; padding-top: 64px; }
+  .rule-metrics { top: 10px; right: 12px; text-align: right; }
 }
 
 @media (min-width: 768px) {
   .bottom-tabs { left: 50%; transform: translateX(-50%); max-width: 920px; border: 1px solid var(--border); border-bottom: 0; border-radius: 12px 12px 0 0; }
 }
+
+.field-helper { margin-top: 6px; font-size: .8rem; color: #8a94aa; }
