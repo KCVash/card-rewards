@@ -85,7 +85,7 @@
   },
   {
     "bank": "台新",
-    "name": "GoGo卡",
+    "name": "Richart卡",
     "rules": [
       {
         "category": "行動支付",
@@ -174,7 +174,7 @@
         "category": "國外消費",
         "reward": {
           "type": "miles",
-          "spend": 18,
+          "spend": 15,
           "miles": 1
         },
         "keywords": "海外,國外,機票,航空,飯店",
