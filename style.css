@@ -184,6 +184,7 @@ button.outline { background: #fff; border: 1px solid var(--border); }
 .rate-text { font-size: 1.1rem; font-weight: 800; color: #cb2b2b; line-height: 1.2; }
 .value-text { margin-top: 1px; font-size: .73rem; color: #667594; }
 .weight-text { margin-top: 3px; font-size: .75rem; color: #9aa4b8; }
+.formula-text { margin-top: 2px; font-size: .68rem; color: #7e8aa3; }
 
 .rule-layout {
   display: grid;
@@ -339,3 +340,21 @@ mark { background: var(--highlight); border-radius: 4px; padding: 0 2px; }
 }
 
 .field-helper { margin-top: 6px; font-size: .8rem; color: #8a94aa; }
+
+.row.three { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.readonly-rate {
+  border: 1px dashed #cfd9ef;
+  border-radius: 10px;
+  background: #f8faff;
+  padding: 10px 12px;
+}
+.readonly-rate-main {
+  color: #1f4eb2;
+  font-weight: 700;
+  font-size: .92rem;
+}
+.field-helper.warn { color: #b15e00; min-height: 18px; }
+
+@media (max-width: 560px) {
+  .row.three { grid-template-columns: 1fr; }
+}
