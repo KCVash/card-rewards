@@ -73,7 +73,6 @@ function rewardDisplayText(rule) {
 
 function rewardSubText(rule) {
   const reward = window.RewardUtils.normalizeReward(rule);
-  if (reward.type === 'miles') return '里程換算';
   return '';
 }
 
@@ -84,6 +83,11 @@ function rewardFormulaText(rule) {
     const m = parseNumber(reward.multiplier) ?? 1;
     if (m !== 1) return `公式：${p}% × ${m}`;
     return '';
+  }
+  if (reward.type === 'miles') {
+    const spend = parseNumber(reward.spend) ?? 0;
+    const miles = parseNumber(reward.miles) ?? 1;
+    return `公式：${miles} ÷ ${spend} × 100`;
   }
   if (reward.type === 'ratio') {
     const base = parseNumber(reward.basePercentage) ?? 0;
