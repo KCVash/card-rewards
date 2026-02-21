@@ -5,50 +5,78 @@
     "rules": [
       {
         "category": "玩數位",
-        "percentage": 3,
-        "valueText": "",
+        "reward": {
+          "type": "ratio",
+          "basePercentage": 3,
+          "numerator": 1000,
+          "denominator": 360
+        },
         "keywords": "Google Play,Apple,iTunes,App Store,Netflix,Spotify,Disney+,YouTube Premium,KKBOX,蝦皮,momo,PChome,淘寶,天貓,Coupang,酷澎,Uber One,ChatGPT,Canva,Claude,Notion",
         "note": "需切換【玩數位】"
       },
       {
         "category": "樂饗購",
-        "percentage": 3,
-        "valueText": "",
+        "reward": {
+          "type": "ratio",
+          "basePercentage": 3,
+          "numerator": 1000,
+          "denominator": 360
+        },
         "keywords": "餐廳,外送,Uber Eats,foodpanda,麥當勞,肯德基,星巴克,路易莎,康是美,屈臣氏,SOGO,新光三越,遠東百貨,台北101,誠品,微風,漢神,巨城,Global Mall,夢時代,藥妝",
         "note": "需切換【樂饗購】"
       },
       {
         "category": "趣旅行",
-        "percentage": 3,
-        "valueText": "",
+        "reward": {
+          "type": "ratio",
+          "basePercentage": 3,
+          "numerator": 1000,
+          "denominator": 360
+        },
         "keywords": "日本,韓國,海外實體,國外餐飲,高鐵,Uber,台灣大車隊,yoxi,iRent,格上租車,華航,長榮,星宇,虎航,國泰航空,日航,阿聯酋,Agoda,Booking.com,Airbnb,Klook,KKday,易遊網,雄獅,可樂旅遊",
         "note": "需切換【趣旅行】"
       },
       {
         "category": "集精選",
-        "percentage": 2,
-        "valueText": "",
+        "reward": {
+          "type": "ratio",
+          "basePercentage": 2,
+          "numerator": 1000,
+          "denominator": 360
+        },
         "keywords": "7-11,全家,萊爾富,OK,全聯,家樂福,愛買,大潤發,IKEA,中油,城市車旅,停車,U-POWER,充電",
         "note": "需切換【集精選】"
       },
       {
         "category": "慶生月",
-        "percentage": 10,
-        "valueText": "",
+        "reward": {
+          "type": "ratio",
+          "basePercentage": 10,
+          "numerator": 1000,
+          "denominator": 360
+        },
         "keywords": "慶生,生日,錢櫃,好樂迪,星聚點,享溫馨,東京迪士尼,大阪環球影城,USJ,PlayStation,Nintendo,礁溪庄櫻桃谷,碳佐麻里,屋馬,茶六,茹絲葵",
         "note": "限生日當月切換【慶生月】"
       },
       {
         "category": "瘋大港",
-        "percentage": 3.5,
-        "valueText": "",
+        "reward": {
+          "type": "ratio",
+          "basePercentage": 3.5,
+          "numerator": 1000,
+          "denominator": 360
+        },
         "keywords": "大港開唱,拓元售票,Klook大港,高雄住宿,駁二",
         "note": "期間限定"
       },
       {
         "category": "童樂匯",
-        "percentage": 5,
-        "valueText": "",
+        "reward": {
+          "type": "ratio",
+          "basePercentage": 5,
+          "numerator": 1000,
+          "denominator": 360
+        },
         "keywords": "學費,補習班,幼稚園,藥局,卡多摩,丁丁藥局,大樹藥局,麗嬰房,玩具反斗城,功文文教,朱宗慶,雲門舞集,Yamaha音樂,親子餐廳",
         "note": "需符合親子帳戶資格"
       }
@@ -61,15 +89,23 @@
     "rules": [
       {
         "category": "行動支付",
-        "percentage": 3.8,
-        "valueText": "",
+        "reward": {
+          "type": "ratio",
+          "basePercentage": 3.8,
+          "numerator": 13,
+          "denominator": 11
+        },
         "keywords": "Line Pay,全支付,台新Pay",
         "note": "上限1000點"
       },
       {
         "category": "網購",
-        "percentage": 3.8,
-        "valueText": "",
+        "reward": {
+          "type": "ratio",
+          "basePercentage": 3.8,
+          "numerator": 13,
+          "denominator": 11
+        },
         "keywords": "蝦皮,momo,PChome,酷澎",
         "note": "上限1000點"
       }
@@ -82,15 +118,21 @@
     "rules": [
       {
         "category": "餐飲娛樂",
-        "percentage": 4.88,
-        "valueText": "",
+        "reward": {
+          "type": "percentage",
+          "percentage": 4.88,
+          "multiplier": 2
+        },
         "keywords": "餐廳,王品,瓦城,爭鮮,麥當勞,星巴克,遠東百貨,SOGO,新光三越,威秀",
         "note": "綁定扣繳有加碼"
       },
       {
         "category": "一般消費",
-        "percentage": 1,
-        "valueText": "",
+        "reward": {
+          "type": "percentage",
+          "percentage": 1,
+          "multiplier": 2
+        },
         "keywords": "一般",
         "note": "無上限"
       }
@@ -103,15 +145,21 @@
     "rules": [
       {
         "category": "海外消費",
-        "percentage": 0,
-        "valueText": "20元/哩",
+        "reward": {
+          "type": "miles",
+          "spend": 20,
+          "miles": 1
+        },
         "keywords": "海外,國外,日本,韓國,歐美,Agoda,Booking",
         "note": "哩程回饋"
       },
       {
         "category": "國內消費",
-        "percentage": 0,
-        "valueText": "22元/哩",
+        "reward": {
+          "type": "miles",
+          "spend": 22,
+          "miles": 1
+        },
         "keywords": "一般,保費",
         "note": "哩程回饋"
       }
@@ -124,15 +172,21 @@
     "rules": [
       {
         "category": "國外消費",
-        "percentage": 0,
-        "valueText": "15元/哩",
+        "reward": {
+          "type": "miles",
+          "spend": 18,
+          "miles": 1
+        },
         "keywords": "海外,國外,機票,航空,飯店",
         "note": "哩程回饋"
       },
       {
         "category": "國內消費",
-        "percentage": 0,
-        "valueText": "18元/哩",
+        "reward": {
+          "type": "miles",
+          "spend": 18,
+          "miles": 1
+        },
         "keywords": "一般",
         "note": "哩程回饋"
       }
